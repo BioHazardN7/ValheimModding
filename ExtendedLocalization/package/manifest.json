@@ -1,0 +1,7 @@
+{
+    "name": "ExtendedLocalization",
+    "description": "A plugin that overrides existing localization tokens and adds new ones from simple per-language text files.",
+    "version_number": "1.0.0",
+    "website_url": "https://github.com/BioHazardN7/ValheimModding",
+    "dependencies": []
+}

@@ -5,4 +5,4 @@
 - Install BepInEx
 - Extract zip into game folder
 
-`publicized Assemblies` will be created in `valheim_Data\Managed\publicized_assemblies` folder.
+`Publicized Assemblies` will be created in `valheim_Data\Managed\publicized_assemblies` folder.

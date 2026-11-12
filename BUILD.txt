@@ -1,0 +1,14 @@
+dotnet build ExtendedLocalization/ExtendedLocalization.csproj -c Release
+dotnet build ExtendedLocalization/ExtendedLocalization.csproj -c Debug
+
+dotnet build ExtendedPortalSystem/ExtendedPortalSystem.csproj -c Release
+dotnet build ExtendedPortalSystem/ExtendedPortalSystem.csproj -c Debug
+
+dotnet build ExtraSlotsRework/ExtraSlotsRework.csproj -c Release
+dotnet build ExtraSlotsRework/ExtraSlotsRework.csproj -c Debug
+
+dotnet build GemBagVisualTweaks/GemBagVisualTweaks.csproj -c Release
+dotnet build GemBagVisualTweaks/GemBagVisualTweaks.csproj -c Debug
+
+dotnet build ProximityPickup/ProximityPickup.csproj -c Release
+dotnet build ProximityPickup/ProximityPickup.csproj -c Debug

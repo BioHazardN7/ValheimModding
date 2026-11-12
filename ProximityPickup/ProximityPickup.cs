@@ -15,9 +15,7 @@ namespace ProximityPickup
         public const string PluginName = "ProximityPickup";
         public const string PluginVersion = "1.0.0";
 
-        private const string DefaultPrefabs =
-            "Pickable_DolmenTreasure, Pickable_DvergrMineTreasure, Pickable_ForestCryptRandom, " +
-            "Pickable_Item, Pickable_MorkHallaTreasure, Pickable_MountainCaveRandom, Pickable_SunkenCryptRandom";
+        private const string DefaultPrefabs = "Pickable_DolmenTreasure, Pickable_ForestCryptRandom, Pickable_Item, Pickable_MorkHallaTreasure, Pickable_MountainCaveRandom, Pickable_SunkenCryptRandom";
 
         internal static ProximityPickupPlugin Instance;
 
@@ -30,6 +28,7 @@ namespace ProximityPickup
 
         private ConfigEntry<bool> _enabled;
         private ConfigEntry<float> _radius;
+        private ConfigEntry<float> _maxBelow;
         private ConfigEntry<int> _maxPerFrame;
         private ConfigEntry<float> _retryDelay;
         private ConfigEntry<string> _prefabList;
@@ -53,8 +52,15 @@ namespace ProximityPickup
 
             _radius = Config.Bind("General", "Radius", 5f,
                 new ConfigDescription(
-                    "Radius (in meters) around the player in which listed objects are picked up automatically.",
+                    "Horizontal radius (in meters) around the player in which listed objects are picked up automatically.",
                     new AcceptableValueRange<float>(0.5f, 50f)));
+
+            _maxBelow = Config.Bind("General", "MaxDistanceBelow", 0.5f,
+                new ConfigDescription(
+                    "Maximum distance (in meters) BELOW the player at which objects are still picked up. " +
+                    "Objects deeper than this (for example buried treasure) are ignored. " +
+                    "There is no limit above the player.",
+                    new AcceptableValueRange<float>(0f, 50f)));
 
             _maxPerFrame = Config.Bind("General", "MaxPerFrame", 3,
                 new ConfigDescription(
@@ -160,6 +166,7 @@ namespace ProximityPickup
             Vector3 center = player.transform.position;
             float radius = _radius.Value;
             float sqrRadius = radius * radius;
+            float maxBelow = _maxBelow.Value;
             float now = Time.time;
             int done = 0;
             int max = _maxPerFrame.Value;
@@ -179,7 +186,12 @@ namespace ProximityPickup
                 if (t.NextTry > now)
                     continue;
 
-                if ((nview.transform.position - center).sqrMagnitude > sqrRadius)
+                // Ignore objects lying too far below the player (buried); no limit above.
+                // Then check horizontal distance.
+                Vector3 delta = nview.transform.position - center;
+                if (delta.y < -maxBelow)
+                    continue;
+                if (delta.x * delta.x + delta.z * delta.z > sqrRadius)
                     continue;
 
                 if (!nview.IsValid())

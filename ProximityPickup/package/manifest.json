@@ -1,0 +1,7 @@
+{
+    "name": "ProximityPickup",
+    "description": "Automatically interacts (like pressing E) with treasures and other pickables within a configurable radius.",
+    "version_number": "1.0.0",
+    "website_url": "https://github.com/BioHazardN7/ValheimModding",
+    "dependencies": []
+}

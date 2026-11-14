@@ -9,13 +9,43 @@ namespace ExtendedLocalization
 {
     internal static class TranslationStore
     {
-        public static void Apply(Localization localization, string language)
+        // The merged result (English.yml, then the selected language on top). TranslatePatch reads it for every
+        // lookup. It is replaced as a whole, never modified in place, and only from the main thread.
+        internal static Dictionary<string, string> Overrides = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        private sealed class CachedFile
         {
-            if (!Plugin.Enabled.Value || localization == null || string.IsNullOrEmpty(language))
+            public DateTime LastWrite;
+            public long Length;
+            public Dictionary<string, string> Entries;
+        }
+
+        private static readonly Dictionary<string, CachedFile> Files = new Dictionary<string, CachedFile>(StringComparer.OrdinalIgnoreCase);
+
+        public static void Rebuild(Localization localization, string selected)
+        {
+            var merged = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            if (Plugin.Enabled.Value && localization != null)
             {
-                return;
+                AddFile(merged, "English");
+                if (!string.IsNullOrEmpty(selected) && !string.Equals(selected, "English", StringComparison.OrdinalIgnoreCase))
+                {
+                    AddFile(merged, selected);
+                }
             }
 
+            Overrides = merged;
+
+            if (localization != null)
+            {
+                WriteToTable(localization, merged);
+                EvictCaches(localization);
+            }
+        }
+
+        private static void AddFile(Dictionary<string, string> merged, string language)
+        {
             string path = FindFile(language);
             if (path == null)
             {
@@ -26,35 +56,136 @@ namespace ExtendedLocalization
                 return;
             }
 
-            Dictionary<string, string> entries;
+            Dictionary<string, string> entries = GetEntries(path);
+            if (entries == null)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<string, string> entry in entries)
+            {
+                merged[entry.Key] = entry.Value;
+            }
+        }
+
+        // Files are parsed only when they are new or changed on disk, not on every SetupLanguage call.
+        private static Dictionary<string, string> GetEntries(string path)
+        {
+            CachedFile cached;
+            Files.TryGetValue(path, out cached);
+
             try
             {
-                entries = Parse(path);
+                DateTime write = File.GetLastWriteTimeUtc(path);
+                long length = new FileInfo(path).Length;
+                if (cached != null && cached.LastWrite == write && cached.Length == length)
+                {
+                    return cached.Entries;
+                }
+
+                Dictionary<string, string> entries = Parse(path);
+                Files[path] = new CachedFile { LastWrite = write, Length = length, Entries = entries };
+
+                Plugin.Log.LogInfo("Loaded " + entries.Count + " token(s) from " + Path.GetFileName(path) + ".");
+                if (Plugin.VerboseLogging.Value)
+                {
+                    foreach (KeyValuePair<string, string> entry in entries)
+                    {
+                        Plugin.Log.LogInfo("  $" + entry.Key + " = " + entry.Value);
+                    }
+                }
+
+                return entries;
             }
             catch (Exception e)
             {
                 Plugin.Log.LogError("Failed to read " + Path.GetFileName(path) + ": " + e.Message);
-                return;
+                return cached != null ? cached.Entries : null;
             }
+        }
 
-            int applied = 0;
-            foreach (KeyValuePair<string, string> entry in entries)
+        // Also writes the tokens into the table of this instance, for code that reads the table directly.
+        private static void WriteToTable(Localization localization, Dictionary<string, string> tokens)
+        {
+            foreach (KeyValuePair<string, string> entry in tokens)
             {
                 if (!SetToken(localization, entry.Key, entry.Value))
                 {
-                    Plugin.Log.LogError("Cannot write to the game's translation table: neither Localization.AddWord " +
-                                        "nor the field m_translations was found (game version changed?).");
+                    Plugin.Log.LogWarning("Cannot write to the game's translation table (neither Localization.AddWord " +
+                                          "nor the field m_translations was found); only the lookup patch is used.");
                     return;
                 }
+            }
+        }
 
-                applied++;
-                if (Plugin.VerboseLogging.Value)
+        private static FieldInfo _cacheField;
+        private static MethodInfo _evictAll;
+        private static FieldInfo _instanceField;
+        private static bool _cacheResolved;
+
+        // The game caches finished strings (also "[token]" results), so a string that was localized before our
+        // tokens were known would stay wrong. Dropping the cache makes the next lookup go through TranslatePatch.
+        private static void EvictCaches(Localization localization)
+        {
+            if (!_cacheResolved)
+            {
+                _cacheResolved = true;
+                _cacheField = AccessTools.Field(typeof(Localization), "m_cache");
+                _instanceField = AccessTools.Field(typeof(Localization), "m_instance");
+                if (_cacheField != null)
                 {
-                    Plugin.Log.LogInfo("  $" + entry.Key + " = " + entry.Value);
+                    _evictAll = AccessTools.Method(_cacheField.FieldType, "EvictAll");
                 }
             }
 
-            Plugin.Log.LogInfo("Applied " + applied + " token(s) from " + Path.GetFileName(path) + ".");
+            EvictCache(localization);
+            if (_instanceField != null)
+            {
+                // Reading the field does not start an initialization, unlike Localization.instance.
+                EvictCache(_instanceField.GetValue(null) as Localization);
+            }
+        }
+
+        private static void EvictCache(Localization localization)
+        {
+            if (localization == null || _cacheField == null || _evictAll == null)
+            {
+                return;
+            }
+
+            try
+            {
+                object cache = _cacheField.GetValue(localization);
+                if (cache != null)
+                {
+                    _evictAll.Invoke(cache, null);
+                }
+            }
+            catch (Exception)
+            {
+                // The cache is only an optimization; ignore problems here.
+            }
+        }
+
+        // The language chosen in the game settings, not the one passed to the current SetupLanguage call.
+        internal static string GetSelectedLanguage(Localization localization, string fallback)
+        {
+            try
+            {
+                string selected = localization.GetSelectedLanguage();
+                if (!string.IsNullOrEmpty(selected))
+                {
+                    return selected;
+                }
+            }
+            catch (Exception)
+            {
+                // fall through to the field / fallback below
+            }
+
+            FieldInfo field = AccessTools.Field(typeof(Localization), "m_language");
+            string value = field != null ? field.GetValue(localization) as string : null;
+            return string.IsNullOrEmpty(value) ? fallback : value;
         }
 
         private static MethodInfo _addWord;

@@ -13,7 +13,7 @@ namespace ExtendedLocalization
     {
         public const string PluginGuid = "BioHazardN7.ExtendedLocalization";
         public const string PluginName = "ExtendedLocalization";
-        public const string PluginVersion = "1.0.0";
+        public const string PluginVersion = "1.0.1";
 
         private const long ReloadDelayTicks = TimeSpan.TicksPerMillisecond * 500;
 
@@ -45,7 +45,14 @@ namespace ExtendedLocalization
             Directory.CreateDirectory(TranslationsDir);
 
             _harmony = new Harmony(PluginGuid);
-            _harmony.PatchAll();
+            try
+            {
+                _harmony.PatchAll();
+            }
+            catch (Exception e)
+            {
+                Log.LogError("Failed to apply the Harmony patches (game version changed?): " + e);
+            }
 
             if (HotReload.Value)
             {

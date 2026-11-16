@@ -13,7 +13,7 @@ namespace ExtendedLocalization
     {
         public const string PluginGuid = "BioHazardN7.ExtendedLocalization";
         public const string PluginName = "ExtendedLocalization";
-        public const string PluginVersion = "1.0.1";
+        public const string PluginVersion = "1.0.2";
 
         private const long ReloadDelayTicks = TimeSpan.TicksPerMillisecond * 500;
 

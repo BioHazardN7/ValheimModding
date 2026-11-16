@@ -1,0 +1,53 @@
+Armor
+Audio
+Building
+Camera
+Cheats
+Combat
+Comfort
+Config
+Consumables
+Controller-support
+Cosmetics
+Crafting
+Creatures
+Currency
+Debugging
+Discord
+Enemies
+Equipment
+Farming
+Games
+Language
+Logging
+Mechanics
+Meme
+Mounts
+Networking
+Npc
+Open Source
+Overhaul
+Paid
+Performance
+Pieces
+Progression
+Public Modpack
+PvP
+Quality of Life
+Role Play
+Skill
+Storage
+Taming
+Terraforming
+Tools
+Trader
+Transmog
+Transportation
+Twitch Integration
+User Interface
+Valheim 1.0
+Vehicles
+Visuals
+Weapons
+Weather
+World Generation

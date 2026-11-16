@@ -1,0 +1,13 @@
+# ExtendedLocalization - translation file for the game language "English".
+# The file name is the game language name (English, Swedish, French, Italian, German, Spanish, Russian, Romanian, Bulgarian, Macedonian, Finnish, Danish, Norwegian, Icelandic, Turkish, Lithuanian, Czech, Hungarian, Slovak, Polish, Dutch, Portuguese_European, Portuguese_Brazilian, Chinese, Chinese_Trad, Japanese, Korean, Hindi, Thai, Abenaki, Croatian, Georgian, Greek, Serbian, Ukrainian, Latvian) + .yaml
+#
+# Format:   token : "Text"      (the leading $ of the token is optional)
+# - tokens that already exist in the game are overridden
+# - tokens that do not exist are added (other mods can use them)
+# - use \n for a line break
+# - allowed to use <color>, <b>, <i>, <s>, <u>, <size>, <mark>, <sub>, <sup> tags to change the color and style of the text
+# - comments are only allowed on their own line, starting with #
+#
+# Examples:
+#item_stone_description : "It's a HARD ROCK!"
+#poi_leviathan : "Leviathan"

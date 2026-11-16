@@ -13,7 +13,7 @@ namespace ProximityPickup
     {
         public const string PluginGuid = "BioHazardN7.ProximityPickup";
         public const string PluginName = "ProximityPickup";
-        public const string PluginVersion = "1.0.0";
+        public const string PluginVersion = "1.0.1";
 
         private const string DefaultPrefabs = "Pickable_DolmenTreasure, Pickable_ForestCryptRandom, Pickable_Item, Pickable_MorkHallaTreasure, Pickable_MountainCaveRandom, Pickable_SunkenCryptRandom";
 
